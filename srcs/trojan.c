@@ -100,7 +100,8 @@ void pop_shell(int port, t_client *cls)
 	if (!pid)
 	{
 		for (int i = 0; i < 3; i++)
-			close(cls[i].fd);
+			if(cls[i].fd)
+				close(cls[i].fd);
 		int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
     // network
@@ -171,8 +172,50 @@ int net_receive(t_client *cl, fd_set *socks, int *n_cl, t_client *cls)
 	return (0);
 }
 
+void daemonize()
+{
+   pid_t pid;
+
+    /* Fork off the parent process */
+    pid = fork();
+
+    /* An error occurred */
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+    /* On success: The child process becomes session leader */
+    if (setsid() < 0)
+        exit(EXIT_FAILURE);
+
+
+    /* Fork off for the second time*/
+    pid = fork();
+
+    /* An error occurred */
+    if (pid < 0)
+        exit(EXIT_FAILURE);
+
+    /* Success: Let the parent terminate */
+    if (pid > 0)
+        exit(EXIT_SUCCESS);
+
+
+    /* Change the working directory to the root directory */
+    /* or another appropriated directory */
+    chdir("/");
+
+	close(0);
+	close(1);
+	close(2);
+}
+
 int main()
 {
+	daemonize();
 	int n_clients = 0;
 	t_client clients[3];
 	fd_set sockets, ready_sockets;
