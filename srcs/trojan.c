@@ -76,6 +76,7 @@ int net_accept(t_client *cl, int serv_fd)
 		return (-4);
 	cl->is_connected = 1;
 	cl->fd = cl_fd;
+	printf("new client %d\n", cl_fd);
 	return cl_fd;
 
 }
@@ -99,23 +100,24 @@ void pop_shell(t_client *cl)
 		return;
 	if (!pid)
 	{
+		close(cl->fd);
 		int sockfd, connfd, len;
     struct sockaddr_in servaddr, cli;
     // network
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1)
-		return;
+		exit(0);
 	servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
     servaddr.sin_port = htons(cl->shellport);
     if ((bind(sockfd, (struct sockaddr*)&servaddr, sizeof(servaddr))) != 0)
-		return;
+		exit(0);
 	if ((listen(sockfd, 2)) != 0)
-		return;
+		exit(0);
 	len = sizeof(cli);
 	connfd = accept(sockfd, (struct sockaddr*)&cli, &len);
 	if (connfd < 0)
-		return;
+		exit(0);
     char * const argv[] = {"/bin/bash", NULL};
     char * const envp[] = {NULL};
 
@@ -150,7 +152,7 @@ int net_receive(t_client *cl, fd_set *socks, int *n_cl)
 	{
 		close(cl->fd);
 		FD_CLR(cl->fd, socks);
-		bzero(cl, sizeof(t_client) -sizeof(int));
+		bzero(cl, sizeof(t_client) );
 		(*n_cl)--;
 	}
 	else if (!strcmp(buff, "help\n"))
@@ -160,7 +162,12 @@ int net_receive(t_client *cl, fd_set *socks, int *n_cl)
 	}
 	else if (!strcmp(buff, "shell\n"))
 	{
+		printf("poping a shell for %d\n", cl->fd);
 		pop_shell(cl);
+		close(cl->fd);
+		FD_CLR(cl->fd, socks);
+		bzero(cl, sizeof(t_client));
+		(*n_cl)--;
 	}
 	return (0);
 }
@@ -194,6 +201,9 @@ int main()
 			return (1);
 		for (int i = 0; i <= max_fd; i++)
 		{
+		clients[0].shellport = 4243;
+		clients[1].shellport = 4244;
+		clients[2].shellport = 4245;
 			if (FD_ISSET(i, &wsockets))
 			{
 				t_client *cl = find_cl(clients, i);
@@ -223,7 +233,7 @@ int main()
 					{
 						close(i);
 						FD_CLR(i, &sockets);
-						bzero(find_cl(clients, i), sizeof(t_client) - sizeof(int));
+						bzero(find_cl(clients, i), sizeof(t_client));
 						n_clients--;
 					}
 					if (r == 2)
