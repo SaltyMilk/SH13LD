@@ -1,5 +1,5 @@
 # Durex
-Educational trojan horse. [WIP]
+Educational trojan horse.
 
 :warning: PLEASE DON'T BE STUPID: DO NOT RUN THIS ON YOUR SYSTEM. :warning:
 # How does it work
