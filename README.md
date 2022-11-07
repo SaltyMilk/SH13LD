@@ -1,4 +1,4 @@
-# Durex
+# SH13LD
 Educational trojan horse.
 
 :warning: PLEASE DON'T BE STUPID: DO NOT RUN THIS ON YOUR SYSTEM. :warning:
